@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DSA Notes
+
+A high-performance, local-first environment for tracking, studying, and mastering Data Structures and Algorithms (DSA) patterns. Designed as a unified workspace for technical interview preparation.
+
+## Core Architecture
+
+- **Framework**: Next.js (App Router)
+- **State Management**: Zustand
+- **Persistence Layer**: IndexedDB (via `idb-keyval`)
+- **Styling**: Tailwind CSS
+- **Transitions**: Framer Motion
+- **Editors**: Monaco Editor (Implementation), `@uiw/react-md-editor` (Markdown)
+
+## Features
+
+### Local-First Persistence
+All data is stored exclusively in the browser using IndexedDB. The application is fully capable of running offline with zero backend dependencies, prioritizing user privacy and immediate read/write access.
+
+### Pattern Tracking
+Organize interview questions by fundamental algorithmic patterns. Each pattern maintains its own structured core logic, including:
+- Algorithmic Approach & Logic
+- Time and Space Complexity bounds
+- Boilerplate Code Templates
+- Edge Cases & Variations
+
+### Code Workspace
+Integrated dual-pane workspace modeled for active subproblem resolution.
+- **Left Pane**: Markdown integration for documenting the underlying logic, approach, and mathematical insight per problem.
+- **Right Pane**: Embedded Monaco Editor supporting Python, TypeScript, Java, C++, and Go for active code implementation.
+
+### Spaced Repetition System (SRS)
+Built-in review queue utilizing the SM-2 algorithm. Personal insights and logic paradigms are automatically formatted as flashcards and scheduled for subsequent review to enforce long-term memory retention.
+
+### Data Portability
+Seamless state migration tools. Export the entire IndexedDB store as a JSON payload for manual backup or cross-device restoration.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18.17 or later
+- npm or pnpm
+
+### Installation
+
+1. Clone the repository.
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd dsa-notes
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies.
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start the development server.
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open `http://localhost:3000` in your browser.
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `/app`: Next.js App Router endpoints and structural layout templates.
+- `/components`: Self-contained modular React components (Layout, Pattern Visualization, Subquestion Workspace).
+- `/lib`: Core logic interfaces, including the Zustand data store, SM-2 scheduling algorithms, and fuzzy search utilities.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
