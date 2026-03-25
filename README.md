@@ -1,6 +1,6 @@
 # DSA Notes
 
-A high-performance, local-first environment for tracking, studying, and mastering Data Structures and Algorithms (DSA) patterns. Designed as a unified workspace for technical interview preparation.
+![App Screenshot](./screenshot.png)A high-performance, local-first environment for tracking, studying, and mastering Data Structures and Algorithms (DSA) patterns. Designed as a unified workspace for technical interview preparation.
 
 ## Core Architecture
 
