@@ -1,4 +1,7 @@
 export type Difficulty = "easy" | "medium" | "hard"
+export type ReviewCardType = "pattern-insight" | "problem-solution"
+export type ReviewPromptMode = "recall" | "recognition"
+export type ActivityEventType = "subquestion-solved" | "review-rated"
 
 export interface PatternContent {
   description: string;
@@ -49,4 +52,16 @@ export interface ReviewCard {
   repetitions: number
   nextDue: string         // ISO date
   lastRating?: 1 | 2 | 3 | 4
+  cardType?: ReviewCardType
+  promptMode?: ReviewPromptMode
+}
+
+export interface ActivityEvent {
+  id: string
+  type: ActivityEventType
+  timestamp: string
+  patternId: string
+  subquestionId?: string
+  noteId?: string
+  rating?: 1 | 2 | 3 | 4
 }

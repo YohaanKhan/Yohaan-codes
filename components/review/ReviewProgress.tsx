@@ -1,11 +1,19 @@
 "use client"
 
-export default function ReviewProgress({ current, total }: { current: number; total: number }) {
+export default function ReviewProgress({
+  current,
+  total,
+  detail,
+}: {
+  current: number
+  total: number
+  detail?: string
+}) {
   const percentage = total === 0 ? 100 : Math.round((current / total) * 100)
   
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-2">
-      <div className="flex justify-between text-sm font-semibold text-[var(--text-muted)]">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-2">
+      <div className="flex flex-wrap justify-between gap-3 text-sm font-semibold text-[var(--text-muted)]">
         <span>Review Session</span>
         <span>{current} / {total}</span>
       </div>
@@ -15,6 +23,7 @@ export default function ReviewProgress({ current, total }: { current: number; to
           style={{ width: `${percentage}%` }}
         />
       </div>
+      {detail && <p className="text-xs text-[var(--text-muted)]">{detail}</p>}
     </div>
   )
 }

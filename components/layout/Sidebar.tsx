@@ -3,12 +3,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import ThemeToggle from "./ThemeToggle"
 import { useStore } from "@/lib/store"
-import { ChevronRight, ChevronDown, Download, Upload } from "lucide-react"
+import { getBlind75Progress } from "@/lib/blind75"
+import { ChevronRight, ChevronDown, Download, Upload, ArrowRight, House, Target } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRef } from "react"
 
 export default function Sidebar() {
-  const { patterns, reviewCards, notes, searchQuery, setSearchQuery } = useStore()
+  const { patterns, reviewCards, notes, activityLog, blind75Entries, searchQuery, setSearchQuery } = useStore()
   const pathname = usePathname() || ""
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -21,9 +22,10 @@ export default function Sidebar() {
     const parentPattern = patterns.find(p => p.id === parentNote?.patternId)
     return parentNote && parentPattern && new Date(c.nextDue) <= new Date()
   }).length
+  const blind75Progress = getBlind75Progress(patterns, notes, blind75Entries)
 
   const handleExport = () => {
-    const data = { patterns, notes, reviewCards }
+    const data = { patterns, notes, reviewCards, activityLog }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -44,17 +46,18 @@ export default function Sidebar() {
         const text = event.target?.result as string
         const parsed = JSON.parse(text)
         
-        if (parsed.patterns || parsed.notes || parsed.reviewCards) {
+        if (parsed.patterns || parsed.notes || parsed.reviewCards || parsed.activityLog) {
           useStore.setState({
             patterns: parsed.patterns || [],
             notes: parsed.notes || [],
-            reviewCards: parsed.reviewCards || []
+            reviewCards: parsed.reviewCards || [],
+            activityLog: parsed.activityLog || [],
           })
           alert("Backup successfully restored! Your storage has been synced.")
         } else {
           alert("Invalid backup file structure.")
         }
-      } catch (err) {
+      } catch {
         alert("Failed to parse backup file.")
       }
     }
@@ -65,7 +68,7 @@ export default function Sidebar() {
     <aside className="w-64 border-r border-[var(--border)] bg-[var(--bg-subtle)] flex flex-col h-full shrink-0">
       <div className="p-4 border-b border-[var(--border)] flex justify-between items-center">
         <Link href="/patterns" className="font-bold text-lg hover:text-[var(--text-muted)] transition-colors">
-          DSA Notes
+          Yohaan Notes
         </Link>
         <ThemeToggle />
       </div>
@@ -81,6 +84,42 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto w-full p-4 space-y-1">
+        <Link
+          href="/"
+          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors font-medium ${
+            pathname === "/" ? "bg-[var(--bg-hover)] font-bold" : "hover:bg-[var(--bg-hover)]"
+          }`}
+        >
+          <House size={14} />
+          <span>Dashboard</span>
+        </Link>
+        <Link
+          href="/blind75"
+          className={`block rounded border px-3 py-3 transition-colors ${
+            pathname === "/blind75"
+              ? "border-[var(--text)] bg-[var(--bg)] shadow-sm"
+              : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-hover)]"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Target size={14} />
+              <span className="font-bold">Blind 75</span>
+            </div>
+            <span className="text-xs font-bold text-[var(--text-muted)]">
+              {blind75Progress.percentage}%
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--bg-hover)]">
+            <div
+              className="h-full rounded-full bg-[var(--text)] transition-[width] duration-300"
+              style={{ width: `${blind75Progress.percentage}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] font-semibold text-[var(--text-muted)]">
+            {blind75Progress.completed}/{blind75Progress.total} tracked
+          </p>
+        </Link>
         <Link href="/patterns" className="block px-3 py-2 rounded hover:bg-[var(--bg-hover)] transition-colors font-medium">
           All Patterns ({patterns.length})
         </Link>
@@ -142,6 +181,17 @@ export default function Sidebar() {
               {dueCount}
             </span>
           )}
+        </Link>
+        <Link
+          href="/review"
+          className={`mb-3 flex items-center justify-between rounded border px-3 py-3 text-sm font-bold transition-all ${
+            dueCount > 0
+              ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--bg)] shadow-sm hover:opacity-90"
+              : "border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          }`}
+        >
+          <span>{dueCount > 0 ? `Start Review (${dueCount})` : "Open Review Queue"}</span>
+          <ArrowRight size={16} />
         </Link>
         <input 
           type="file" 

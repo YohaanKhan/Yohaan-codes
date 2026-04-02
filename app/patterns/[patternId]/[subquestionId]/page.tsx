@@ -1,13 +1,11 @@
 "use client"
 import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
 import { useStore } from "@/lib/store"
 
 import NoteEditor from "@/components/editor/NoteEditor"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Editor from "@monaco-editor/react"
-import { motion } from "framer-motion"
 
 export default function SubquestionDetailPage({ params }: { params: Promise<{ patternId: string, subquestionId: string }> }) {
   const { patternId, subquestionId } = use(params)
@@ -18,29 +16,20 @@ export default function SubquestionDetailPage({ params }: { params: Promise<{ pa
   
   const existingNote = notes.find(n => n.patternId === patternId && n.subquestionId === subquestionId)
   
-  const [approach, setApproach] = useState("")
-  const [code, setCode] = useState("")
-  const [codeLanguage, setCodeLanguage] = useState("python")
-  const [isClient, setIsClient] = useState(false)
-  const [isDark, setIsDark] = useState(true)
+  const [approach, setApproach] = useState(existingNote?.approach || "")
+  const [code, setCode] = useState(existingNote?.code || "")
+  const [codeLanguage, setCodeLanguage] = useState(existingNote?.codeLanguage || "python")
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  )
 
   useEffect(() => {
-    setIsClient(true)
-    if (existingNote) {
-      setApproach(existingNote.approach || "")
-      setCode(existingNote.code || "")
-      setCodeLanguage(existingNote.codeLanguage || "python")
-    }
-    setIsDark(document.documentElement.classList.contains("dark"))
-    
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains("dark"))
     })
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
     return () => observer.disconnect()
-  }, [existingNote])
-
-  if (!isClient) return null
+  }, [])
 
   if (!pattern || !subquestion) return (
     <main className="flex-1 flex items-center justify-center">
@@ -48,22 +37,43 @@ export default function SubquestionDetailPage({ params }: { params: Promise<{ pa
     </main>
   )
 
-  const handleSave = () => {
-    const noteId = existingNote?.id || crypto.randomUUID()
-    upsertNote({
-      id: noteId,
+  const buildProblemNote = () => {
+    const trimmedApproach = approach.trim()
+    const trimmedCode = code.trim()
+    if (!trimmedApproach && !trimmedCode) {
+      alert("Add your approach or code first so this review card has something useful to show.")
+      return null
+    }
+
+    return {
+      id: existingNote?.id || crypto.randomUUID(),
       patternId: pattern.id,
       subquestionId,
-      approach,
-      code,
+      approach: trimmedApproach,
+      code: trimmedCode,
       codeLanguage,
       personalNotes: "",
       tags: [],
       createdAt: existingNote?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    })
-    initCard(noteId)
-    alert("Saved problem solution and queued for Review.")
+    }
+  }
+
+  const handleSave = () => {
+    const note = buildProblemNote()
+    if (!note) return
+
+    upsertNote(note)
+    alert("Saved problem solution.")
+  }
+
+  const handleQueueForReview = () => {
+    const note = buildProblemNote()
+    if (!note) return
+
+    upsertNote(note)
+    initCard(note.id, { cardType: "problem-solution", promptMode: "recall" })
+    alert("Question added to review.")
   }
 
   const toggleStatus = () => {
@@ -85,6 +95,9 @@ export default function SubquestionDetailPage({ params }: { params: Promise<{ pa
           <div className="flex gap-2 shrink-0 items-center">
              <button onClick={toggleStatus} className={`px-5 py-2.5 border rounded text-xs font-bold transition-all shadow-sm ${subquestion.status === 'solved' ? 'border-green-500 text-green-700 bg-green-50 dark:bg-green-950/30' : 'border-[var(--border)] hover:bg-[var(--bg-hover)]'}`}>
               {subquestion.status === "solved" ? "✓ Solved" : "Mark as Solved"}
+            </button>
+            <button onClick={handleQueueForReview} className="px-5 py-2.5 border border-[var(--border)] rounded text-xs font-bold hover:bg-[var(--bg-hover)] shadow-sm transition-colors">
+              Add to Review
             </button>
             <button onClick={handleSave} className="px-6 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded text-xs font-bold hover:opacity-90 shadow-sm transition-opacity">
               Save Solution

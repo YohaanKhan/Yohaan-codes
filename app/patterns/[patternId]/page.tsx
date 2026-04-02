@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, use } from "react"
+import { useState, use } from "react"
 import { useRouter } from "next/navigation"
 import { useStore } from "@/lib/store"
 
@@ -8,7 +8,6 @@ import NoteEditor from "@/components/editor/NoteEditor"
 import MarkdownPreview from "@/components/editor/MarkdownPreview"
 import PatternContentTabs from "@/components/patterns/PatternContentTabs"
 import PracticeTable from "@/components/patterns/PracticeTable"
-import { motion } from "framer-motion"
 
 export default function PatternDetailPage({ params }: { params: Promise<{ patternId: string }> }) {
   const { patternId } = use(params)
@@ -17,18 +16,8 @@ export default function PatternDetailPage({ params }: { params: Promise<{ patter
 
   const pattern = patterns.find(p => p.id === patternId)
   const existingNote = notes.find(n => n.patternId === patternId && !n.subquestionId)
-  const [content, setContent] = useState("")
-  const [isClient, setIsClient] = useState(false)
+  const [content, setContent] = useState(existingNote?.approach || "")
   const [editingNotes, setEditingNotes] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-    if (existingNote) {
-      setContent(existingNote.approach)
-    }
-  }, [existingNote])
-
-  if (!isClient) return null
 
   if (!pattern) return (
     <main className="flex-1 flex items-center justify-center">
@@ -36,21 +25,41 @@ export default function PatternDetailPage({ params }: { params: Promise<{ patter
     </main>
   )
 
-  const handleSaveNote = () => {
-    const noteId = existingNote?.id || crypto.randomUUID()
-    upsertNote({
-      id: noteId,
+  const buildPatternNote = () => {
+    const trimmedContent = content.trim()
+    if (!trimmedContent) {
+      alert("Add some personal insights first so there is something meaningful to review.")
+      return null
+    }
+
+    return {
+      id: existingNote?.id || crypto.randomUUID(),
       patternId: pattern.id,
-      approach: content,
+      approach: trimmedContent,
       code: "",
       codeLanguage: "typescript",
       personalNotes: "",
       tags: [],
       createdAt: existingNote?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    })
-    initCard(noteId)
-    alert("Saved Personal Note and queued for Review!")
+    }
+  }
+
+  const handleSaveNote = () => {
+    const note = buildPatternNote()
+    if (!note) return
+
+    upsertNote(note)
+    alert("Saved personal insights.")
+  }
+
+  const handleQueueForReview = () => {
+    const note = buildPatternNote()
+    if (!note) return
+
+    upsertNote(note)
+    initCard(note.id, { cardType: "pattern-insight", promptMode: "recall" })
+    alert("Pattern added to review.")
   }
 
   const handleDelete = () => {
@@ -99,14 +108,22 @@ export default function PatternDetailPage({ params }: { params: Promise<{ patter
                   <button onClick={() => setEditingNotes(false)} className="px-4 py-1.5 border border-[var(--border)] text-sm font-bold rounded hover:bg-[var(--bg-hover)] transition-colors shadow-sm">
                     Cancel
                   </button>
+                  <button onClick={handleQueueForReview} className="px-4 py-1.5 border border-[var(--border)] text-sm font-bold rounded hover:bg-[var(--bg-hover)] transition-colors shadow-sm">
+                    Add to Review
+                  </button>
                   <button onClick={() => { handleSaveNote(); setEditingNotes(false); }} className="px-4 py-1.5 bg-[var(--accent)] text-[var(--bg)] font-bold rounded text-sm hover:opacity-90 transition-colors shadow-sm">
                     Save Insights
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setEditingNotes(true)} className="px-4 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text)] font-bold rounded text-sm hover:bg-[var(--bg-hover)] transition-colors shadow-sm">
-                  Edit Insights
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleQueueForReview} className="px-4 py-1.5 border border-[var(--border)] text-[var(--text)] font-bold rounded text-sm hover:bg-[var(--bg-hover)] transition-colors shadow-sm">
+                    Add to Review
+                  </button>
+                  <button onClick={() => setEditingNotes(true)} className="px-4 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text)] font-bold rounded text-sm hover:bg-[var(--bg-hover)] transition-colors shadow-sm">
+                    Edit Insights
+                  </button>
+                </div>
               )}
             </div>
             {editingNotes ? (
